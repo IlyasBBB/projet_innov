@@ -1,0 +1,49 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}{{ reward.name }} - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-md-6">
+            {% if reward.image %}
+                <img src="{{ reward.image.url }}" class="img-fluid rounded" alt="{{ reward.name }}">
+            {% endif %}
+        </div>
+        <div class="col-md-6">
+            <h2>{{ reward.name }}</h2>
+            <div class="mb-4">
+                <span class="badge bg-primary">{{ reward.points_required }} points</span>
+                <span class="badge bg-secondary">{{ reward.available_quantity }} disponible(s)</span>
+            </div>
+            <p class="lead">{{ reward.description }}</p>
+            
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Vos points</h5>
+                    <p class="card-text">
+                        <span class="h3">{{ user.points }} points</span>
+                        {% if user.points < reward.points_required %}
+                            <br>
+                            <small class="text-muted">
+                                Il vous manque {{ reward.points_required|sub:user.points }} points pour cette récompense
+                            </small>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <button class="btn btn-success btn-lg w-100 claim-reward"
+                    {% if user.points < reward.points_required or reward.available_quantity < 1 %}disabled{% endif %}>
+                {% if user.points < reward.points_required %}
+                    Il vous manque {{ reward.points_required|sub:user.points }} points
+                {% elif reward.available_quantity < 1 %}
+                    Rupture de stock
+                {% else %}
+                    Échanger maintenant
+                {% endif %}
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %} 

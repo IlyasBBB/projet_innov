@@ -1,0 +1,121 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Modifier mon profil - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-body">
+                    <h3 class="card-title mb-4">Modifier mon profil</h3>
+                    <form method="post" enctype="multipart/form-data" class="needs-validation" novalidate>
+                        {% csrf_token %}
+                        
+                        {% if form.errors %}
+                            <div class="alert alert-danger">
+                                <ul class="mb-0">
+                                    {% for field, errors in form.errors.items %}
+                                        {% for error in errors %}
+                                            <li>{{ error }}</li>
+                                        {% endfor %}
+                                    {% endfor %}
+                                </ul>
+                            </div>
+                        {% endif %}
+
+                        <!-- Informations personnelles -->
+                        <h5 class="mb-3">Informations personnelles</h5>
+                        <div class="row mb-4">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="first_name" class="form-label">Prénom</label>
+                                    <input type="text" class="form-control" id="first_name" name="first_name" 
+                                           value="{{ user.first_name }}" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="last_name" class="form-label">Nom</label>
+                                    <input type="text" class="form-control" id="last_name" name="last_name" 
+                                           value="{{ user.last_name }}" required>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Coordonnées -->
+                        <h5 class="mb-3">Coordonnées</h5>
+                        <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" name="email" 
+                                   value="{{ user.email }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="phone_number" class="form-label">Numéro de téléphone</label>
+                            <input type="tel" class="form-control" id="phone_number" name="phone_number" 
+                                   value="{{ user.phone_number }}" required>
+                        </div>
+
+                        <!-- Photo de profil -->
+                        <h5 class="mb-3">Photo de profil</h5>
+                        <div class="mb-4">
+                            <label for="profile_image" class="form-label">Changer la photo</label>
+                            <input type="file" class="form-control" id="profile_image" name="profile_image">
+                        </div>
+
+                        <!-- Sécurité -->
+                        <h5 class="mb-3">Changer le mot de passe</h5>
+                        <div class="mb-3">
+                            <label for="current_password" class="form-label">Mot de passe actuel</label>
+                            <input type="password" class="form-control" id="current_password" name="current_password">
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="new_password" class="form-label">Nouveau mot de passe</label>
+                                    <input type="password" class="form-control" id="new_password" name="new_password">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="confirm_password" class="form-label">Confirmer le mot de passe</label>
+                                    <input type="password" class="form-control" id="confirm_password" name="confirm_password">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">Enregistrer les modifications</button>
+                            <a href="{% url 'renova_cycle:profile_view' %}" class="btn btn-outline-secondary">Annuler</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    // Validation du formulaire
+    $('.needs-validation').submit(function(event) {
+        if (!this.checkValidity()) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        $(this).addClass('was-validated');
+    });
+
+    // Vérification de la correspondance des mots de passe
+    $('#confirm_password').on('input', function() {
+        if ($('#new_password').val() !== $(this).val()) {
+            $(this).get(0).setCustomValidity('Les mots de passe ne correspondent pas');
+        } else {
+            $(this).get(0).setCustomValidity('');
+        }
+    });
+});
+</script>
+{% endblock %} 

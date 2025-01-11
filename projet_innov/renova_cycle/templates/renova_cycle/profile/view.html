@@ -1,0 +1,103 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Mon Profil - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <!-- Informations principales -->
+        <div class="col-md-4">
+            <div class="card mb-4">
+                <div class="card-body text-center">
+                    <div class="mb-3">
+                        {% if user.profile_image %}
+                            <img src="{{ user.profile_image.url }}" class="rounded-circle" width="150" height="150">
+                        {% else %}
+                            <div class="bg-secondary text-white rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 150px; height: 150px;">
+                                <span class="display-4">{{ user.first_name|first }}{{ user.last_name|first }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                    <h4>{{ user.get_full_name }}</h4>
+                    <p class="text-muted">{{ user.get_user_type_display }}</p>
+                    <div class="mb-3">
+                        <span class="badge bg-success">{{ user.points }} points</span>
+                    </div>
+                    <a href="{% url 'renova_cycle:profile_edit' %}" class="btn btn-primary">Modifier le profil</a>
+                </div>
+            </div>
+
+            <!-- Coordonnées -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Coordonnées</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2">
+                            <i class="fas fa-envelope me-2"></i> {{ user.email }}
+                        </li>
+                        <li class="mb-2">
+                            <i class="fas fa-phone me-2"></i> {{ user.phone_number }}
+                        </li>
+                        {% if user.identity_card %}
+                        <li class="mb-2">
+                            <i class="fas fa-id-card me-2"></i> CIN: {{ user.identity_card }}
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistiques et activités -->
+        <div class="col-md-8">
+            <!-- Statistiques -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Mes statistiques</h5>
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h3>{{ total_deposits }}</h3>
+                            <p class="text-muted">Dépôts effectués</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3>{{ total_points_earned }}</h3>
+                            <p class="text-muted">Points gagnés</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h3>{{ total_rewards_claimed }}</h3>
+                            <p class="text-muted">Récompenses obtenues</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dernières activités -->
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Activités récentes</h5>
+                    <ul class="list-group list-group-flush">
+                        {% for activity in recent_activities %}
+                        <li class="list-group-item">
+                            {% if activity.type == 'deposit' %}
+                                <i class="fas fa-recycle text-success me-2"></i>
+                                Dépôt de déchets - {{ activity.points }} points gagnés
+                            {% elif activity.type == 'reward' %}
+                                <i class="fas fa-gift text-primary me-2"></i>
+                                Récompense réclamée - {{ activity.reward.name }}
+                            {% endif %}
+                            <small class="text-muted float-end">
+                                {{ activity.date|date:"d/m/Y H:i" }}
+                            </small>
+                        </li>
+                        {% empty %}
+                        <li class="list-group-item text-center">
+                            Aucune activité récente
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

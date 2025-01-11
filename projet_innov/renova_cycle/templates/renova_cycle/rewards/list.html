@@ -1,0 +1,182 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Récompenses - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- En-tête avec les points de l'utilisateur -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Catalogue des récompenses</h2>
+        </div>
+        <div class="col-md-4 text-end">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Vos points</h5>
+                    <h3 class="mb-0">{{ user.points }} points</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtres -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <form method="get" class="row g-3">
+                        <div class="col-md-4">
+                            <select class="form-select" name="points_range">
+                                <option value="">Points requis</option>
+                                <option value="0-100">0-100 points</option>
+                                <option value="101-500">101-500 points</option>
+                                <option value="501+">501+ points</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <select class="form-select" name="availability">
+                                <option value="">Disponibilité</option>
+                                <option value="available">Disponible</option>
+                                <option value="all">Tout afficher</option>
+                            </select>
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary w-100">Filtrer</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des récompenses -->
+    <div class="row row-cols-1 row-cols-md-3 g-4">
+        {% for reward in rewards %}
+        <div class="col">
+            <div class="card h-100">
+                {% if reward.image %}
+                    <img src="{{ reward.image.url }}" class="card-img-top" alt="{{ reward.name }}">
+                {% endif %}
+                <div class="card-body">
+                    <h5 class="card-title">{{ reward.name }}</h5>
+                    <p class="card-text">{{ reward.description }}</p>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span class="badge bg-primary">{{ reward.points_required }} points</span>
+                        <span class="text-muted">{{ reward.available_quantity }} disponible(s)</span>
+                    </div>
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-success w-100 claim-reward" 
+                            data-reward-id="{{ reward.id }}"
+                            {% if user.points < reward.points_required or reward.available_quantity < 1 %}disabled{% endif %}>
+                        {% if user.points < reward.points_required %}
+                            Il vous manque {{ reward.points_required|sub:user.points }} points
+                        {% elif reward.available_quantity < 1 %}
+                            Rupture de stock
+                        {% else %}
+                            Échanger
+                        {% endif %}
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <div class="alert alert-info">
+                Aucune récompense disponible pour le moment.
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Historique des récompenses réclamées -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <h3>Mes récompenses réclamées</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Récompense</th>
+                            <th>Points dépensés</th>
+                            <th>Statut</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for claim in user_claims %}
+                        <tr>
+                            <td>{{ claim.claim_date|date:"d/m/Y H:i" }}</td>
+                            <td>{{ claim.reward.name }}</td>
+                            <td>{{ claim.points_spent }}</td>
+                            <td>
+                                <span class="badge bg-success">Réclamée</span>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center">Vous n'avez pas encore réclamé de récompense.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmation -->
+<div class="modal fade" id="confirmClaimModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmer l'échange</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Êtes-vous sûr de vouloir échanger <span id="rewardPoints"></span> points contre cette récompense ?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-success" id="confirmClaim">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+$(document).ready(function() {
+    let selectedRewardId = null;
+
+    $('.claim-reward').click(function() {
+        const rewardId = $(this).data('reward-id');
+        const pointsRequired = $(this).closest('.card').find('.badge').text().split(' ')[0];
+        selectedRewardId = rewardId;
+        
+        $('#rewardPoints').text(pointsRequired);
+        $('#confirmClaimModal').modal('show');
+    });
+
+    $('#confirmClaim').click(function() {
+        if (selectedRewardId) {
+            $.ajax({
+                url: `/api/rewards/${selectedRewardId}/claim/`,
+                method: 'POST',
+                data: {
+                    csrfmiddlewaretoken: '{{ csrf_token }}'
+                },
+                success: function(response) {
+                    location.reload();
+                },
+                error: function(xhr) {
+                    alert('Une erreur est survenue lors de l\'échange.');
+                }
+            });
+        }
+        $('#confirmClaimModal').modal('hide');
+    });
+});
+</script>
+{% endblock %} 

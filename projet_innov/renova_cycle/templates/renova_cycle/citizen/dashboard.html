@@ -1,0 +1,197 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Tableau de bord Citoyen - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Mon Tableau de bord</h2>
+            <p class="text-muted">Bienvenue, {{ user.get_full_name }}</p>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Mes points</h5>
+                    <h3 class="mb-0">{{ user.points }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total dépôts</h5>
+                    <h3 class="mb-0">{{ deposits.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Récompenses obtenues</h5>
+                    <h3 class="mb-0">{{ rewards_claimed }}</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte des conteneurs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Conteneurs à proximité</h5>
+                    <div id="map" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Historique des dépôts -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Mes derniers dépôts</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type</th>
+                                    <th>Quantité</th>
+                                    <th>Points</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for deposit in deposits|slice:":5" %}
+                                <tr>
+                                    <td>{{ deposit.deposit_date|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ deposit.container.get_waste_type_display }}</td>
+                                    <td>{{ deposit.waste_quantity }} kg</td>
+                                    <td>+{{ deposit.points_earned }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Aucun dépôt enregistré</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Récompenses disponibles -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Récompenses disponibles</h5>
+                    <div class="row">
+                        {% for reward in available_rewards|slice:":4" %}
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                {% if reward.image %}
+                                <img src="{{ reward.image.url }}" class="card-img-top" alt="{{ reward.name }}">
+                                {% endif %}
+                                <div class="card-body">
+                                    <h6 class="card-title">{{ reward.name }}</h6>
+                                    <p class="card-text">
+                                        <small class="text-muted">{{ reward.points_required }} points</small>
+                                    </p>
+                                    {% if user.points >= reward.points_required %}
+                                    <form method="post" action="{% url 'renova_cycle:claim_reward' reward.id %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-primary btn-sm">Réclamer</button>
+                                    </form>
+                                    {% else %}
+                                    <button class="btn btn-secondary btn-sm" disabled>
+                                        Points insuffisants
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="col-12">
+                            <p class="text-center">Aucune récompense disponible</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de scan QR -->
+<div class="modal fade" id="scanModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Scanner un QR code</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="reader"></div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}"></script>
+<script src="https://unpkg.com/html5-qrcode"></script>
+<script>
+// Initialisation de la carte
+function initMap() {
+    const map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 33.5731, lng: -7.5898 }, // Coordonnées de Casablanca
+        zoom: 12
+    });
+
+    // Ajouter les marqueurs pour chaque conteneur
+    {% for container in containers %}
+    new google.maps.Marker({
+        position: { lat: {{ container.latitude }}, lng: {{ container.longitude }} },
+        map: map,
+        title: '{{ container.location }}',
+        icon: {
+            url: "{% if container.current_fill_level >= 80 %}red{% elif container.current_fill_level >= 50 %}yellow{% else %}green{% endif %}-dot.png"
+        }
+    });
+    {% endfor %}
+}
+
+$(document).ready(function() {
+    initMap();
+
+    // Configuration du scanner QR
+    const html5QrcodeScanner = new Html5QrcodeScanner(
+        "reader", { fps: 10, qrbox: 250 }
+    );
+
+    html5QrcodeScanner.render((decodedText) => {
+        // Envoyer le code QR au serveur
+        $.post("{% url 'renova_cycle:scan_qr' %}", {
+            qr_code: decodedText,
+            csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val()
+        })
+        .done(function(response) {
+            $('#scanModal').modal('hide');
+            location.reload();
+        })
+        .fail(function(xhr) {
+            alert('Erreur lors du scan du QR code');
+        });
+    });
+});
+</script>
+{% endblock %} 

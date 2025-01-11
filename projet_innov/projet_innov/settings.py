@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,7 +21,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-ct6bd*lz=%81mxn=5@qxhe7t(bt7j=o)_gn^($-6h_5dzy@nv&'
+SECRET_KEY = 'votre-clé-secrète-ici'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -37,7 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'renova_cycle',
+    'renova_cycle.apps.RenovaCycleConfig',
 ]
 
 MIDDLEWARE = [
@@ -55,7 +56,9 @@ ROOT_URLCONF = 'projet_innov.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [
+            os.path.join(BASE_DIR, 'renova_cycle', 'templates'),
+        ],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -63,6 +66,8 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'django.template.context_processors.media',
+                'django.template.context_processors.static',
             ],
         },
     },
@@ -104,11 +109,13 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'fr-fr'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Casablanca'
 
 USE_I18N = True
+
+USE_L10N = True
 
 USE_TZ = True
 
@@ -116,7 +123,14 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
@@ -124,3 +138,64 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'renova_cycle.User'
+
+# Configuration de l'authentification
+LOGIN_URL = 'renova_cycle:login'
+LOGIN_REDIRECT_URL = 'renova_cycle:home'
+LOGOUT_REDIRECT_URL = 'renova_cycle:home'
+
+# Configuration des emails
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'  # À modifier selon votre fournisseur
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'votre-email@gmail.com'  # À modifier
+EMAIL_HOST_PASSWORD = 'votre-mot-de-passe'  # À modifier
+
+# Configuration des messages
+MESSAGE_STORAGE = 'django.contrib.messages.storage.session.SessionStorage'
+
+# Paramètres de sécurité
+SECURE_SSL_REDIRECT = False  # Mettre à True en production
+SESSION_COOKIE_SECURE = False  # Mettre à True en production
+CSRF_COOKIE_SECURE = False  # Mettre à True en production
+
+# Paramètres spécifiques à l'application
+POINTS_PER_KG = {
+    'ORGANIC': 5,
+    'NON_ORGANIC': 10
+}
+
+# Configuration Google Maps
+GOOGLE_MAPS_API_KEY = 'votre-clé-api-google-maps'  # À modifier
+
+# Taille maximale des fichiers uploadés
+DATA_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+FILE_UPLOAD_MAX_MEMORY_SIZE = 5242880  # 5MB
+
+# Configuration du cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+    }
+}
+
+# Configuration des logs
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file': {
+            'level': 'DEBUG',
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'debug.log'),
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': True,
+        },
+    },
+}

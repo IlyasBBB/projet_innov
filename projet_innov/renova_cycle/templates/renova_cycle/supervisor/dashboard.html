@@ -1,0 +1,162 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Tableau de bord Superviseur - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Statistiques générales -->
+    <div class="col-md-12 mb-4">
+        <div class="row">
+            <div class="col-md-3">
+                <div class="card bg-primary text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Total Utilisateurs</h5>
+                        <h2>{{ total_users }}</h2>
+                        <p>Citoyens actifs</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-success text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Déchets Collectés</h5>
+                        <h2>{{ total_waste }}kg</h2>
+                        <p>Cette semaine</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-warning text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Points Distribués</h5>
+                        <h2>{{ total_points }}</h2>
+                        <p>Cette semaine</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card bg-info text-white">
+                    <div class="card-body">
+                        <h5 class="card-title">Récompenses Réclamées</h5>
+                        <h2>{{ total_rewards }}</h2>
+                        <p>Cette semaine</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte de tous les conteneurs -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Vue d'ensemble des conteneurs</h5>
+                <div id="map" style="height: 500px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Alertes et notifications -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Alertes</h5>
+                <div class="list-group">
+                    {% for container in containers %}
+                        {% if container.current_fill_level >= 80 %}
+                        <div class="list-group-item list-group-item-danger">
+                            <h6 class="mb-1">Conteneur #{{ container.container_id }}</h6>
+                            <p class="mb-1">{{ container.location }}</p>
+                            <small>Niveau critique: {{ container.current_fill_level }}%</small>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tableau des dernières activités -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Dernières activités</h5>
+                <ul class="nav nav-tabs" id="activityTabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="collections-tab" data-bs-toggle="tab" href="#collections">Collectes</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="deposits-tab" data-bs-toggle="tab" href="#deposits">Dépôts</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="rewards-tab" data-bs-toggle="tab" href="#rewards">Récompenses</a>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3">
+                    <div class="tab-pane fade show active" id="collections">
+                        <div class="table-responsive">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Collecteur</th>
+                                        <th>Conteneur</th>
+                                        <th>Quantité</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for collection in collections %}
+                                    <tr>
+                                        <td>{{ collection.collection_date|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ collection.collector.get_full_name }}</td>
+                                        <td>{{ collection.container.location }}</td>
+                                        <td>{{ collection.waste_quantity }}kg</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <!-- Autres onglets similaires pour les dépôts et récompenses -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    function initMap() {
+        const map = new google.maps.Map(document.getElementById('map'), {
+            zoom: 14,
+            center: {lat: 33.5731, lng: -7.5898}
+        });
+
+        {% for container in containers %}
+        new google.maps.Marker({
+            position: {
+                lat: {{ container.latitude }},
+                lng: {{ container.longitude }}
+            },
+            map: map,
+            title: 'Conteneur #{{ container.container_id }}',
+            icon: {
+                url: {% if container.current_fill_level >= 80 %}
+                    'path/to/red-marker.png'
+                {% elif container.current_fill_level >= 50 %}
+                    'path/to/yellow-marker.png'
+                {% else %}
+                    'path/to/green-marker.png'
+                {% endif %}
+            }
+        });
+        {% endfor %}
+    }
+
+    $(document).ready(function() {
+        initMap();
+    });
+</script>
+{% endblock %} 

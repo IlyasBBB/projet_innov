@@ -1,0 +1,226 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Tableau de bord Municipalité - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h2>Tableau de bord Municipalité</h2>
+            <p class="text-muted">Bienvenue, {{ user.get_full_name }}</p>
+        </div>
+    </div>
+
+    <!-- Statistiques -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Conteneurs à collecter</h5>
+                    <h3 class="mb-0">{{ critical_containers_count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Collectes ce mois</h5>
+                    <h3 class="mb-0">{{ collections.count }}</h3>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5 class="card-title">Total déchets collectés</h5>
+                    <h3 class="mb-0">{{ total_collected|floatformat:1 }} kg</h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte des conteneurs -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Carte des conteneurs</h5>
+                    <div id="map" style="height: 400px;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des conteneurs -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Conteneurs à collecter</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Localisation</th>
+                                    <th>Niveau</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for container in containers %}
+                                    {% if container.current_fill_level >= 50 %}
+                                        <tr>
+                                            <td>{{ container.container_id }}</td>
+                                            <td>{{ container.location }}</td>
+                                            <td>
+                                                <div class="progress">
+                                                    <div class="progress-bar {% if container.current_fill_level >= 80 %}bg-danger{% elif container.current_fill_level >= 50 %}bg-warning{% else %}bg-success{% endif %}" 
+                                                         role="progressbar" 
+                                                         style="width: {{ container.current_fill_level }}%">
+                                                        {{ container.current_fill_level }}%
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-primary btn-sm collect-btn" 
+                                                        data-container-id="{{ container.id }}">
+                                                    Collecter
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    {% endif %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-center">Aucun conteneur à collecter</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Historique des collectes -->
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">Historique des collectes</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Conteneur</th>
+                                    <th>Quantité</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for collection in collections|slice:":10" %}
+                                    <tr>
+                                        <td>{{ collection.collection_date|date:"d/m/Y H:i" }}</td>
+                                        <td>{{ collection.container.location }}</td>
+                                        <td>{{ collection.waste_quantity }} kg</td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">Aucune collecte enregistrée</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de collecte -->
+<div class="modal fade" id="collectModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Enregistrer une collecte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="collectForm">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="waste_quantity" class="form-label">Quantité collectée (kg)</label>
+                        <input type="number" class="form-control" id="waste_quantity" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                <button type="button" class="btn btn-primary" id="confirmCollect">Confirmer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}"></script>
+<script>
+let map;
+let markers = [];
+let selectedContainerId;
+
+function initMap() {
+    map = new google.maps.Map(document.getElementById('map'), {
+        center: { lat: 33.5731, lng: -7.5898 }, // Coordonnées de Casablanca
+        zoom: 12
+    });
+
+    // Ajouter les marqueurs pour chaque conteneur
+    {% for container in containers %}
+        new google.maps.Marker({
+            position: { lat: {{ container.latitude }}, lng: {{ container.longitude }} },
+            map: map,
+            title: '{{ container.location }}',
+            icon: {
+                url: "{% if container.current_fill_level >= 80 %}red{% elif container.current_fill_level >= 50 %}yellow{% else %}green{% endif %}-dot.png"
+            }
+        });
+    {% endfor %}
+}
+
+$(document).ready(function() {
+    initMap();
+
+    // Gérer le clic sur le bouton de collecte
+    $('.collect-btn').click(function() {
+        selectedContainerId = $(this).data('container-id');
+        $('#collectModal').modal('show');
+    });
+
+    // Gérer la confirmation de collecte
+    $('#confirmCollect').click(function() {
+        const quantity = $('#waste_quantity').val();
+        if (!quantity) return;
+
+        $.ajax({
+            url: `/container/${selectedContainerId}/update/`,
+            method: 'POST',
+            data: {
+                csrfmiddlewaretoken: $('[name=csrfmiddlewaretoken]').val(),
+                quantity: quantity
+            },
+            success: function(response) {
+                location.reload();
+            },
+            error: function(xhr) {
+                alert('Une erreur est survenue lors de l\'enregistrement de la collecte.');
+            }
+        });
+
+        $('#collectModal').modal('hide');
+    });
+});
+</script>
+{% endblock %} 

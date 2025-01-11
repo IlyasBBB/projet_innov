@@ -1,0 +1,37 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Connexion - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-body">
+                <h3 class="card-title text-center mb-4">Connexion</h3>
+                <form method="post" action="{% url 'renova_cycle:login' %}">
+                    {% csrf_token %}
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            Nom d'utilisateur ou mot de passe incorrect.
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Nom d'utilisateur</label>
+                        <input type="text" class="form-control" id="username" name="username" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Mot de passe</label>
+                        <input type="password" class="form-control" id="password" name="password" required>
+                    </div>
+                    <div class="d-grid gap-2">
+                        <button type="submit" class="btn btn-primary">Se connecter</button>
+                    </div>
+                </form>
+                <div class="text-center mt-3">
+                    <p>Pas encore de compte ? <a href="{% url 'renova_cycle:register' %}">S'inscrire</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

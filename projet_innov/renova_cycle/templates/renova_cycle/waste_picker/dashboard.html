@@ -1,0 +1,90 @@
+{% extends 'renova_cycle/base.html' %}
+
+{% block title %}Tableau de bord Chiffonier - RenovaCycle{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Informations personnelles -->
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Mon profil</h5>
+                <p><strong>Nom:</strong> {{ user.get_full_name }}</p>
+                <p><strong>CIN:</strong> {{ user.identity_card }}</p>
+                <p><strong>Téléphone:</strong> {{ user.phone_number }}</p>
+                <hr>
+                <h6>Statistiques du jour</h6>
+                <p><strong>Collectes effectuées:</strong> {{ today_collections_count }}</p>
+                <p><strong>Quantité collectée:</strong> {{ today_waste_quantity }}kg</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Carte des conteneurs -->
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title">Conteneurs de déchets non-organiques</h5>
+                <div id="map" style="height: 400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Liste des conteneurs -->
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">Conteneurs à collecter</h5>
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Localisation</th>
+                                <th>Niveau de remplissage</th>
+                                <th>Dernière collecte</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for container in containers %}
+                            <tr>
+                                <td>#{{ container.container_id }}</td>
+                                <td>{{ container.location }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <div class="progress-bar {% if container.current_fill_level >= 80 %}bg-danger
+                                                                {% elif container.current_fill_level >= 50 %}bg-warning
+                                                                {% else %}bg-success{% endif %}"
+                                             role="progressbar"
+                                             style="width: {{ container.current_fill_level }}%">
+                                            {{ container.current_fill_level }}%
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>{{ container.last_emptied|date:"d/m/Y H:i" }}</td>
+                                <td>
+                                    <button class="btn btn-sm btn-success collect-btn"
+                                            data-container-id="{{ container.id }}"
+                                            {% if container.current_fill_level < 50 %}disabled{% endif %}>
+                                        Marquer comme collecté
+                                    </button>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+<script>
+    // Même logique JavaScript que pour le dashboard municipalité
+    // ... (code de la carte et gestion des boutons de collecte)
+</script>
+{% endblock %} 
