@@ -13,6 +13,7 @@ from .models import (
 from django.core.exceptions import PermissionDenied
 from django.db import models
 from django.conf import settings
+from .forms import UserRegistrationForm
 
 def home(request):
     """Vue de la page d'accueil"""
@@ -28,31 +29,17 @@ def home(request):
 def register_view(request):
     """Vue d'inscription"""
     if request.method == 'POST':
-        # Traitement du formulaire d'inscription
-        user_type = request.POST.get('user_type')
-        if user_type not in [User.CITIZEN, User.WASTE_PICKER]:
-            messages.error(request, "Type d'utilisateur non autorisé.")
-            return redirect('register')
-
-        # Création de l'utilisateur
-        try:
-            user = User.objects.create_user(
-                username=request.POST.get('username'),
-                email=request.POST.get('email'),
-                password=request.POST.get('password1'),
-                first_name=request.POST.get('first_name'),
-                last_name=request.POST.get('last_name'),
-                user_type=user_type,
-                phone_number=request.POST.get('phone_number'),
-                identity_card=request.POST.get('identity_card')
-            )
+        form = UserRegistrationForm(request.POST, request.FILES)
+        if form.is_valid():
+            user = form.save()
             login(request, user)
-            return redirect('home')
-        except Exception as e:
-            messages.error(request, str(e))
-            return redirect('register')
-
-    return render(request, 'registration/register.html')
+            return redirect('renova_cycle:home')
+        else:
+            messages.error(request, "Erreur lors de l'inscription. Veuillez vérifier les informations saisies.")
+    else:
+        form = UserRegistrationForm()
+    
+    return render(request, 'registration/register.html', {'form': form})
 
 @login_required
 def citizen_dashboard(request):
