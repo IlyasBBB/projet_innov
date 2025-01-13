@@ -1,168 +1,113 @@
 {% extends 'renova_cycle/base.html' %}
 {% load static %}
-{% block title %}RenovaCycle - Gestion des déchets au Maroc{% endblock %}
+
+{% block title %}Accueil - RenovaCycle{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div class="container-fluid bg-success text-white py-5">
-    <div class="container">
-        <div class="row align-items-center">
-            <div class="col-md-6">
-                <h1 class="display-4 mb-4">Ensemble pour un Maroc plus durable</h1>
-                <p class="lead mb-4">Participez à la révolution du recyclage. Triez vos déchets, gagnez des points et contribuez à un environnement plus sain.</p>
-                {% if not user.is_authenticated %}
-                    <div class="d-grid gap-2 d-md-flex">
-                        <a href="{% url 'renova_cycle:register' %}" class="btn btn-light btn-lg me-md-2">S'inscrire</a>
-                        <a href="{% url 'renova_cycle:login' %}" class="btn btn-outline-light btn-lg">Se connecter</a>
-                    </div>
-                {% else %}
-                    <a href="{% url 'renova_cycle:citizen_dashboard' %}" class="btn btn-light btn-lg">Mon tableau de bord</a>
-                {% endif %}
+<div class="container-fluid px-0">
+    <!-- Hero Section -->
+    <div class="hero-section text-center py-5 bg-primary text-white">
+        <div class="container py-5">
+            <h1 class="display-4 mb-4">Bienvenue sur RenovaCycle</h1>
+            <p class="lead mb-4">Ensemble pour un avenir plus vert et plus propre</p>
+            <div class="mt-4">
+                <a href="{% url 'renova_cycle:register' %}" class="btn btn-light btn-lg me-3">
+                    <i class="fas fa-user-plus me-2"></i>S'inscrire
+                </a>
+                <a href="{% url 'renova_cycle:login' %}" class="btn btn-outline-light btn-lg">
+                    <i class="fas fa-sign-in-alt me-2"></i>Se connecter
+                </a>
             </div>
-            <div class="col-md-6">
-                <img src="{% static 'images/hero-image.png' %}" alt="Recyclage" class="img-fluid">
+        </div>
+    </div>
+
+    <!-- Features Section -->
+    <div class="container py-5">
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-recycle fa-3x text-primary mb-3"></i>
+                        <h3>Pour les Citoyens</h3>
+                        <p>Déposez vos déchets, gagnez des points et échangez-les contre des récompenses.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-city fa-3x text-primary mb-3"></i>
+                        <h3>Pour les Municipalités</h3>
+                        <p>Gérez vos conteneurs et suivez les statistiques de recyclage en temps réel.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body text-center">
+                        <i class="fas fa-truck fa-3x text-primary mb-3"></i>
+                        <h3>Pour les Chiffonniers</h3>
+                        <p>Optimisez vos collectes et contribuez à un environnement plus propre.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- How it Works Section -->
+    <div class="bg-light py-5">
+        <div class="container">
+            <h2 class="text-center mb-5">Comment ça marche ?</h2>
+            <div class="row g-4">
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="circle-step mb-3">1</div>
+                        <h4>Inscrivez-vous</h4>
+                        <p>Créez votre compte en quelques clics</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="circle-step mb-3">2</div>
+                        <h4>Déposez</h4>
+                        <p>Trouvez un point de collecte près de chez vous</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="circle-step mb-3">3</div>
+                        <h4>Gagnez des points</h4>
+                        <p>Chaque dépôt vous rapporte des points</p>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="text-center">
+                        <div class="circle-step mb-3">4</div>
+                        <h4>Échangez</h4>
+                        <p>Convertissez vos points en récompenses</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Comment ça marche -->
-<div class="container my-5">
-    <h2 class="text-center mb-5">Comment ça marche ?</h2>
-    <div class="row g-4">
-        <div class="col-md-3">
-            <div class="card h-100 border-0 text-center">
-                <div class="card-body">
-                    <div class="display-4 text-success mb-3">
-                        <i class="fas fa-trash-alt"></i>
-                    </div>
-                    <h5 class="card-title">1. Triez vos déchets</h5>
-                    <p class="card-text">Séparez vos déchets organiques et non-organiques dans les conteneurs appropriés.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card h-100 border-0 text-center">
-                <div class="card-body">
-                    <div class="display-4 text-success mb-3">
-                        <i class="fas fa-qrcode"></i>
-                    </div>
-                    <h5 class="card-title">2. Scannez le QR code</h5>
-                    <p class="card-text">Utilisez l'application pour scanner le QR code du conteneur lors de votre dépôt.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card h-100 border-0 text-center">
-                <div class="card-body">
-                    <div class="display-4 text-success mb-3">
-                        <i class="fas fa-coins"></i>
-                    </div>
-                    <h5 class="card-title">3. Gagnez des points</h5>
-                    <p class="card-text">Chaque dépôt vous rapporte des points en fonction de votre contribution.</p>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-3">
-            <div class="card h-100 border-0 text-center">
-                <div class="card-body">
-                    <div class="display-4 text-success mb-3">
-                        <i class="fas fa-gift"></i>
-                    </div>
-                    <h5 class="card-title">4. Échangez vos points</h5>
-                    <p class="card-text">Utilisez vos points pour obtenir des récompenses et des avantages exclusifs.</p>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+<style>
+.hero-section {
+    background: linear-gradient(135deg, var(--primary-color), #45a049);
+}
 
-<!-- Statistiques -->
-<div class="container-fluid bg-light py-5">
-    <div class="container">
-        <h2 class="text-center mb-5">Notre impact</h2>
-        <div class="row text-center">
-            <div class="col-md-3">
-                <h3 class="display-4 text-success">{{ total_users }}</h3>
-                <p class="lead">Utilisateurs actifs</p>
-            </div>
-            <div class="col-md-3">
-                <h3 class="display-4 text-success">{{ total_waste }}kg</h3>
-                <p class="lead">Déchets collectés</p>
-            </div>
-            <div class="col-md-3">
-                <h3 class="display-4 text-success">{{ total_containers }}</h3>
-                <p class="lead">Conteneurs installés</p>
-            </div>
-            <div class="col-md-3">
-                <h3 class="display-4 text-success">{{ total_rewards }}</h3>
-                <p class="lead">Récompenses distribuées</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- Carte des conteneurs -->
-<div class="container my-5">
-    <h2 class="text-center mb-4">Trouvez un conteneur près de chez vous</h2>
-    <div id="map" style="height: 400px;" class="rounded shadow"></div>
-</div>
-
-<!-- Témoignages -->
-<div class="container mb-5">
-    <h2 class="text-center mb-4">Ce que disent nos utilisateurs</h2>
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <p class="card-text">"Une excellente initiative qui nous aide à prendre soin de notre environnement tout en étant récompensés."</p>
-                    <footer class="blockquote-footer mt-2">Mohammed A.</footer>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <p class="card-text">"Le système de points est très motivant. Mes enfants adorent scanner les QR codes !"</p>
-                    <footer class="blockquote-footer mt-2">Fatima B.</footer>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-body">
-                    <p class="card-text">"En tant que chiffonier, cette application a vraiment amélioré mon travail quotidien."</p>
-                    <footer class="blockquote-footer mt-2">Hassan M.</footer>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-{% endblock %}
-
-{% block extra_js %}
-<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
-<script>
-    function initMap() {
-        const map = new google.maps.Map(document.getElementById('map'), {
-            zoom: 14,
-            center: {lat: 33.5731, lng: -7.5898} // Coordonnées de Casablanca
-        });
-
-        {% for container in containers %}
-        new google.maps.Marker({
-            position: {
-                lat: {{ container.latitude }},
-                lng: {{ container.longitude }}
-            },
-            map: map,
-            title: '{{ container.get_waste_type_display }} - {{ container.location }}'
-        });
-        {% endfor %}
-    }
-
-    $(document).ready(function() {
-        initMap();
-    });
-</script>
+.circle-step {
+    width: 60px;
+    height: 60px;
+    background-color: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    margin: 0 auto;
+}
+</style>
 {% endblock %} 

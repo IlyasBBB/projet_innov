@@ -1,0 +1,53 @@
+<!-- Modal de signalement de problème -->
+<div class="modal fade" id="reportIssueModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Signaler un problème</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'renova_cycle:report_issue' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="issue_type" class="form-label">Type de problème</label>
+                        <select class="form-select" id="issue_type" name="issue_type" required>
+                            <option value="ACCESS">Problème d'accès</option>
+                            <option value="CONTAINER">Conteneur endommagé</option>
+                            <option value="SAFETY">Problème de sécurité</option>
+                            <option value="OTHER">Autre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="location" class="form-label">Localisation</label>
+                        <select class="form-select" id="location" name="location" required>
+                            {% for point in collection_points %}
+                            <option value="{{ point.id }}">{{ point.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description du problème</label>
+                        <textarea class="form-control" id="description" name="description" 
+                                  rows="4" required></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="urgency" class="form-label">Niveau d'urgence</label>
+                        <select class="form-select" id="urgency" name="urgency" required>
+                            <option value="LOW">Faible</option>
+                            <option value="MEDIUM">Moyen</option>
+                            <option value="HIGH">Élevé</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Envoyer le signalement</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 

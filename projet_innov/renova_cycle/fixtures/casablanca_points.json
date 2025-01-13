@@ -1,0 +1,132 @@
+[
+    {
+        "model": "renova_cycle.collectionzone",
+        "pk": 1,
+        "fields": {
+            "name": "Casablanca Centre",
+            "description": "Zone centrale de Casablanca",
+            "created_at": "2024-01-12T00:00:00Z",
+            "updated_at": "2024-01-12T00:00:00Z"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Marché Central",
+            "address": "Boulevard Mohammed V, Casablanca",
+            "zone": 1,
+            "latitude": 33.5731,
+            "longitude": -7.5898,
+            "is_active": true,
+            "notes": "Point de collecte principal près du marché central"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Maarif Centre",
+            "address": "Rue Ibnou Mounir, Maarif, Casablanca",
+            "zone": 1,
+            "latitude": 33.5867,
+            "longitude": -7.6378,
+            "is_active": true,
+            "notes": "Zone commerciale du Maarif"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Ain Diab",
+            "address": "Boulevard de la Corniche, Casablanca",
+            "zone": 1,
+            "latitude": 33.6016,
+            "longitude": -7.6698,
+            "is_active": true,
+            "notes": "Près de la plage"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Anfa Place",
+            "address": "Boulevard de l'Ocean Atlantique, Casablanca",
+            "zone": 1,
+            "latitude": 33.5955,
+            "longitude": -7.6627,
+            "is_active": true,
+            "notes": "Centre commercial Anfa Place"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Twin Center",
+            "address": "Boulevard Zerktouni, Casablanca",
+            "zone": 1,
+            "latitude": 33.5923,
+            "longitude": -7.6316,
+            "is_active": true,
+            "notes": "Tours jumelles"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Derb Sultan",
+            "address": "Rue 41, Derb Sultan, Casablanca",
+            "zone": 1,
+            "latitude": 33.5662,
+            "longitude": -7.6147,
+            "is_active": true,
+            "notes": "Quartier historique"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Hay Hassani",
+            "address": "Boulevard Al Qods, Hay Hassani, Casablanca",
+            "zone": 1,
+            "latitude": 33.5543,
+            "longitude": -7.6729,
+            "is_active": true,
+            "notes": "Quartier résidentiel"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Sidi Maarouf",
+            "address": "Boulevard Al Qods, Sidi Maarouf, Casablanca",
+            "zone": 1,
+            "latitude": 33.5397,
+            "longitude": -7.6504,
+            "is_active": true,
+            "notes": "Zone industrielle"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Morocco Mall",
+            "address": "Boulevard de l'Ocean Atlantique, Casablanca",
+            "zone": 1,
+            "latitude": 33.5781,
+            "longitude": -7.7022,
+            "is_active": true,
+            "notes": "Plus grand centre commercial"
+        }
+    },
+    {
+        "model": "renova_cycle.collectionpoint",
+        "fields": {
+            "name": "Médina",
+            "address": "Place des Nations Unies, Casablanca",
+            "zone": 1,
+            "latitude": 33.6066,
+            "longitude": -7.6319,
+            "is_active": true,
+            "notes": "Près de l'ancienne médina"
+        }
+    }
+] 

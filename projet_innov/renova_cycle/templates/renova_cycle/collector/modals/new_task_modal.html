@@ -1,0 +1,105 @@
+<!-- Modal de nouvelle tâche -->
+<div class="modal fade" id="newTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nouvelle tâche de collecte</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'renova_cycle:create_task' %}" id="newTaskForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="collection_point" class="form-label">Point de collecte</label>
+                        <select class="form-select" id="collection_point" name="collection_point" required>
+                            <option value="">Sélectionnez un point de collecte</option>
+                            {% for point in collection_points %}
+                                <option value="{{ point.id }}">{{ point.name }} - {{ point.address }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="waste_type" class="form-label">Type de déchet</label>
+                        <select class="form-select" id="waste_type" name="waste_type" required>
+                            <option value="PLASTIC">Plastique</option>
+                            <option value="METAL">Métal</option>
+                            <option value="PAPER">Papier</option>
+                            <option value="GLASS">Verre</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="estimated_weight" class="form-label">Poids estimé (kg)</label>
+                        <input type="number" class="form-control" id="estimated_weight" 
+                               name="estimated_weight" step="0.1" min="0" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="planned_date" class="form-label">Date prévue</label>
+                        <input type="datetime-local" class="form-control" id="planned_date" 
+                               name="planned_date" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Créer la tâche</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 
+
+<script>
+document.getElementById('newTaskForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Récupérer les données du formulaire
+    const formData = new FormData(this);
+    
+    // Debug - afficher les données envoyées
+    console.log('Données envoyées:');
+    for (let pair of formData.entries()) {
+        console.log(pair[0] + ': ' + pair[1]);
+    }
+
+    // Ajouter le token CSRF
+    const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+    
+    fetch(this.action, {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': csrftoken
+        },
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Erreur réseau');
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Réponse reçue:', data);  // Debug
+        if (data.status === 'success') {
+            // Fermer le modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('newTaskModal'));
+            modal.hide();
+            
+            // Réinitialiser le formulaire
+            this.reset();
+            
+            // Recharger la page
+            window.location.reload();
+        } else {
+            alert(data.message || 'Une erreur est survenue');
+        }
+    })
+    .catch(error => {
+        console.error('Erreur:', error);
+        alert('Une erreur est survenue lors de la création de la tâche');
+    });
+});
+</script> 

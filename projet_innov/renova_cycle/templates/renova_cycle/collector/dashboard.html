@@ -1,0 +1,401 @@
+{% extends 'renova_cycle/base.html' %}
+{% load static %}
+{% block title %}Tableau de bord - Chiffonnier{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4">
+    <!-- En-tête avec résumé -->
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2>Bienvenue, {{ user.get_full_name }}</h2>
+            <p class="text-muted">Chiffonnier - Zone(s) : 
+                {% for zone in assigned_zones %}
+                    {{ zone.name }}{% if not forloop.last %}, {% endif %}
+                {% endfor %}
+            </p>
+        </div>
+        <div class="col-md-4 text-end">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#reportIssueModal">
+                <i class="fas fa-exclamation-circle"></i> Signaler un problème
+            </button>
+        </div>
+    </div>
+
+    <!-- Statistiques rapides -->
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="card bg-primary text-white">
+                <div class="card-body">
+                    <h5>Points totaux</h5>
+                    <h2>{{ user.points }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-success text-white">
+                <div class="card-body">
+                    <h5>Déchets collectés aujourd'hui</h5>
+                    <h2>{{ today_collection_weight }} kg</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-info text-white">
+                <div class="card-body">
+                    <h5>Tâches en cours</h5>
+                    <h2>{{ active_tasks_count }}</h2>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card bg-warning text-white">
+                <div class="card-body">
+                    <h5>Notifications</h5>
+                    <h2>{{ unread_notifications_count }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tâches et Zones -->
+    <div class="row">
+        <!-- Liste des tâches -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">Tâches à effectuer</h5>
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#newTaskModal">
+                        <i class="fas fa-plus"></i> Nouvelle tâche
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Point de collecte</th>
+                                    <th>Type de déchet</th>
+                                    <th>Poids estimé</th>
+                                    <th>Statut</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for task in active_tasks %}
+                                <tr>
+                                    <td>{{ task.collection_point.name }}</td>
+                                    <td>{{ task.get_waste_type_display }}</td>
+                                    <td>{{ task.estimated_weight }} kg</td>
+                                    <td>
+                                        <span class="badge bg-{{ task.status_color }}">
+                                            {{ task.get_status_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-success update-task-btn" 
+                                                data-task-id="{{ task.id }}"
+                                                data-bs-toggle="modal" 
+                                                data-bs-target="#updateTaskModal">
+                                            <i class="fas fa-check"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="5" class="text-center">Aucune tâche active</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Historique des collectes -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Historique des collectes</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Type de déchet</th>
+                                    <th>Poids</th>
+                                    <th>Points gagnés</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for record in collection_history %}
+                                <tr>
+                                    <td>{{ record.collection_date|date:"d/m/Y H:i" }}</td>
+                                    <td>{{ record.task.get_waste_type_display }}</td>
+                                    <td>{{ record.weight }} kg</td>
+                                    <td>{{ record.points_earned }}</td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center">Aucun historique disponible</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="col-md-4">
+            <!-- Notifications -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">Notifications</h5>
+                </div>
+                <div class="card-body">
+                    <div class="notifications-carousel">
+                        <div id="notificationsCarousel" class="carousel slide" data-bs-ride="carousel">
+                            <div class="carousel-inner">
+                                {% for notifications_group in notifications_paginated %}
+                                <div class="carousel-item {% if forloop.first %}active{% endif %}">
+                                    <div class="notifications-group">
+                                        {% for notification in notifications_group %}
+                                        <div class="notification-item {% if not notification.read %}unread{% endif %}">
+                                            <div class="notification-header">
+                                                <span class="notification-title">{{ notification.title }}</span>
+                                                <small class="notification-time">{{ notification.created_at|timesince }}</small>
+                                            </div>
+                                            <p class="notification-message">{{ notification.message }}</p>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                            
+                            <!-- Indicateurs (points) -->
+                            <div class="carousel-indicators">
+                                {% for group in notifications_paginated %}
+                                <button type="button" 
+                                        data-bs-target="#notificationsCarousel" 
+                                        data-bs-slide-to="{{ forloop.counter0 }}"
+                                        class="{% if forloop.first %}active{% endif %}"
+                                        aria-current="true" 
+                                        aria-label="Slide {{ forloop.counter }}">
+                                </button>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Messages -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Messages récents</h5>
+                </div>
+                <div class="card-body">
+                    <div class="messages-list">
+                        {% for message in recent_messages %}
+                        <div class="message-item {% if not message.read %}unread{% endif %}">
+                            <h6>De: {{ message.sender.get_full_name }}</h6>
+                            <p>{{ message.content|truncatechars:100 }}</p>
+                            <small class="text-muted">{{ message.sent_at|timesince }}</small>
+                        </div>
+                        {% empty %}
+                        <p class="text-center">Aucun message</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modals -->
+{% include 'renova_cycle/collector/modals/update_task_modal.html' %}
+{% include 'renova_cycle/collector/modals/new_task_modal.html' %}
+{% include 'renova_cycle/collector/modals/report_issue_modal.html' %}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.notification-item, .message-item {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.notification-item:last-child, .message-item:last-child {
+    border-bottom: none;
+}
+
+.unread {
+    background-color: #f8f9fa;
+    border-left: 3px solid var(--primary-color);
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.8em;
+}
+
+.notifications-carousel {
+    margin: 20px 0;
+}
+
+.carousel-indicators {
+    position: relative;
+    margin-top: 15px;
+    bottom: 0;
+}
+
+.carousel-indicators [data-bs-target] {
+    width: 8px !important;
+    height: 8px !important;
+    border-radius: 50% !important;
+    background-color: #ddd !important;
+    opacity: 0.5 !important;
+    transition: all 0.3s ease !important;
+    margin: 0 4px !important;
+    border: none !important;
+}
+
+.carousel-indicators .active {
+    width: 16px !important;
+    border-radius: 4px !important;
+    background-color: #0d6efd !important;
+    opacity: 1 !important;
+}
+
+.notification-item {
+    padding: 15px;
+    margin-bottom: 10px;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+    border-left: 4px solid #dee2e6;
+}
+
+.notification-item.unread {
+    background-color: #e7f5ff;
+    border-left-color: #0d6efd;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.notification-title {
+    font-weight: bold;
+    color: #495057;
+}
+
+.notification-time {
+    color: #6c757d;
+}
+
+.notification-message {
+    margin: 0;
+    color: #495057;
+}
+
+.notifications-group {
+    padding: 10px;
+}
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Mise à jour du statut des tâches
+    const updateTaskButtons = document.querySelectorAll('.update-task-btn');
+    updateTaskButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const taskId = this.dataset.taskId;
+            document.getElementById('task_id').value = taskId;
+        });
+    });
+
+    // Actualisation automatique des notifications
+    setInterval(function() {
+        fetch('{% url "renova_cycle:api_get_notifications" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Mise à jour des notifications
+            });
+    }, 60000); // Toutes les minutes
+
+    // Actualisation automatique des messages
+    setInterval(function() {
+        fetch('{% url "renova_cycle:api_get_messages" %}')
+            .then(response => response.json())
+            .then(data => {
+                // Mise à jour des messages
+            });
+    }, 60000); // Toutes les minutes
+});
+
+function updateTaskStatus(taskId, newStatus, weight = null, notes = '') {
+    const formData = new FormData();
+    formData.append('task_id', taskId);
+    formData.append('status', newStatus);
+    if (weight) formData.append('weight', weight);
+    if (notes) formData.append('notes', notes);
+    
+    fetch('{% url "renova_cycle:update_task_status" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.status === 'success') {
+            // Redirection directe vers le dashboard
+            window.location.href = '{% url "renova_cycle:collector_dashboard" %}';
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('Une erreur est survenue');
+    });
+}
+
+// Gestionnaires d'événements pour les boutons
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('cancel-task')) {
+        if (confirm('Voulez-vous vraiment annuler cette tâche ?')) {
+            updateTaskStatus(e.target.dataset.taskId, 'CANCELLED');
+        }
+    } else if (e.target.classList.contains('start-task')) {
+        updateTaskStatus(e.target.dataset.taskId, 'IN_PROGRESS');
+    } else if (e.target.classList.contains('complete-task')) {
+        const weight = prompt('Entrez le poids collecté (kg):');
+        if (weight) {
+            const notes = prompt('Notes (optionnel):', '');
+            updateTaskStatus(e.target.dataset.taskId, 'COMPLETED', weight, notes);
+        }
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    const carousel = new bootstrap.Carousel(document.getElementById('notificationsCarousel'), {
+        interval: 5000,
+        wrap: true,
+        touch: true
+    });
+});
+</script>
+{% endblock %} 

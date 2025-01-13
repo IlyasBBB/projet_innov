@@ -1,0 +1,41 @@
+<!-- Modal de mise à jour de tâche -->
+<div class="modal fade" id="updateTaskModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Mettre à jour la tâche</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{% url 'renova_cycle:update_task_status' %}">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <input type="hidden" name="task_id" id="task_id">
+                    
+                    <div class="mb-3">
+                        <label for="actual_weight" class="form-label">Poids réel collecté (kg)</label>
+                        <input type="number" class="form-control" id="actual_weight" name="weight" 
+                               step="0.1" min="0" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="status" class="form-label">Nouveau statut</label>
+                        <select class="form-select" id="status" name="status" required>
+                            <option value="IN_PROGRESS">En cours</option>
+                            <option value="COMPLETED">Terminé</option>
+                            <option value="CANCELLED">Annulé</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">Notes (optionnel)</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuler</button>
+                    <button type="submit" class="btn btn-primary">Enregistrer</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div> 
